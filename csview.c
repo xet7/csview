@@ -1,5 +1,6 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "csv-handler.h"
 
@@ -34,6 +35,8 @@ char *getPassedOption(char in, char pos);
 
 char isFlagSet(char in);
 
+char runExtendedOption(char *rc);
+
 // END forward declarations for helper functions.
 
 int main(int argc, char **argv)
@@ -42,6 +45,13 @@ int main(int argc, char **argv)
     argvG = argv;
 
     char rc = 0;
+
+    if (isFlagSet('-')) {
+        // Bad, hacky way of doing this.
+        if (runExtendedOption(&rc)) {
+            return rc;
+        }
+    }
 
     if (isFlagSet('w')) {
         csv_handler_set_width(atoi(getPassedOption('w', 1)));
@@ -387,6 +397,58 @@ char isFlagSet(char in)
         // Starting at 1 again bc 0 is exe name.
         if (argvG[i][0] == '-' && argvG[i][1] == in) {
             // Note that argvG[i][1] must exist, though it might be '\0'.
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/**
+ * Run an "extended" option, i.e., something with two hyphens instead of a flag,
+ * like '--help'.  Return true if need to stop execution after.
+ *
+ * RC is passed as pointer.
+ *
+ * This is *bad* code design, but I need a quick fix and I don't know off the
+ * top of my head a better way to do this.  It works, so that's good enough for
+ * now.
+ *
+ * @param   char *rc
+ */
+char runExtendedOption(char *rc)
+{
+    char *exOp;
+
+    for (int i = 1; i < argcG; i++) {
+        if (argvG[i][0] == '-' && argvG[i][1] == '-') {
+            exOp = argvG[i] + 2;
+        } else {
+            // This wasn't an extended option, so go to next.
+            continue;
+        }
+
+        // Need to put all options *inside* the loop, or else it'll only run the
+        // first one and stop.
+
+        if (strcmp(exOp, "help") == 0) {
+            // PRINT OUT HELP.
+            printf("Very succinct help:\n");
+            printf("Uses stdin.\n");
+            printf("Print headers............... `-h`\n");
+            printf("Suppress line numbers....... `-s`\n");
+            printf("Changes width............... `-w 20`\n");
+            printf("For files without headers... `-n`\n");
+            printf("Change delimiter............ `-d '|'`\n");
+            printf("Skip lines.................. `-k 2`\n");
+            printf("Transposed output........... `-o t`\n");
+            printf("Vertical output............. `-o v`\n");
+            printf("Raw output.................. `-o r`\n");
+            printf("Limits shown fields......... `-f \"Last Name,Customer ID\"`\n");
+            printf("Restrict output by lines.... `-r l \"2-5,7,10-14\"`\n");
+            printf("Restrict output by range.... `-r r \"Purchase Amount\" \"50-175,300-700\"`\n");
+            printf("Restrict output by equals... `-r e \"First Name\" \"John,Jane\"`\n");
+            // Stop execution after this.
             return 1;
         }
     }
