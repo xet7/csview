@@ -229,7 +229,10 @@ char csv_handler_read_next_line()
     }
 
     // Determine if should skip, stop, print, or what-have-you.
-    switch (csvh_line_helper_should_skip(line)) {
+    char **dumParsed = parse_csv(line, delim);
+    char shouldSkip = csvh_line_helper_should_skip(dumParsed);
+    free_csv_line(dumParsed);
+    switch (shouldSkip) {
         case CSVH_LINE_HELPER__SKIP:
             return csv_handler_read_next_line();
         case CSVH_LINE_HELPER__DONE:

@@ -168,13 +168,13 @@ int csvh_line_helper_get_line_num()
  * "Skip" (skip) and "Done" (nothing left to print), according to constants
  * defined in csvh-line-helper.h.
  *
- * What's passed is the unparsed line.  It's important that it be the full
- * line from the input source, not just what's going to be in the output in
+ * What's passed is the complete parsed line.  It's important that it be the
+ * full line from the input source, not just what's going to be in the output in
  * case the condition depends on a column that's not in the output.
  *
- * @param   unparsedLine
+ * @param   parsedLine
  */
-char csvh_line_helper_should_skip(char *unparsedLine)
+char csvh_line_helper_should_skip(char **parsedLine)
 {
     if (hasHeader) {
         // Always want to get the header.
@@ -198,7 +198,6 @@ char csvh_line_helper_should_skip(char *unparsedLine)
     }
 
     // Now parse the line, because it'll be used in the other condition checks.
-    char **parsedLine = parse_csv(unparsedLine, ',');
     char res = CSVH_LINE_HELPER__INTERNAL_ERROR;
     // If return this, it means that there's some kind of foreign condition
     // type that's defined but never used.
@@ -212,7 +211,6 @@ char csvh_line_helper_should_skip(char *unparsedLine)
             break;
     }
 
-    free_csv_line(parsedLine);
     parsedLine = NULL;
     return res;
 }
